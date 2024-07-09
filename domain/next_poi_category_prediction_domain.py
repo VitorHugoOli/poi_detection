@@ -9,6 +9,8 @@ import json
 import pandas as pd
 import sklearn.metrics as skm
 import tensorflow as tf
+from keras.src.losses import CategoricalCrossentropy
+from keras.src.optimizers import Adam
 from tensorflow.keras.callbacks import EarlyStopping
 from tensorflow.keras import utils as np_utils
 from sklearn.model_selection import KFold
@@ -734,7 +736,13 @@ class NextPoiCategoryPredictionDomain:
         print("f", y_train.shape)
         y_test = np.array(y_test)[0]
 
-        model.compile(optimizer=parameters['optimizer'], loss=parameters['loss'],
+        #TODO[@vitor]: ISSO É UM PROBLEMA GRANDE, CONVERSAR COM O PEDRO
+        # opt = parameters['optimizer']
+        # loss = parameters['loss']
+        opt = Adam(learning_rate=0.001, beta_1=0.8, beta_2=0.9)
+        loss = CategoricalCrossentropy()
+
+        model.compile(optimizer=opt, loss=loss,
                       metrics=[tf.keras.metrics.CategoricalAccuracy(name="acc")])
         #print("Quantidade de instâncias de entrada (train): ", np.array(X_train).shape)
         #print("Quantidade de instâncias de entrada (test): ", np.array(X_test).shape)
@@ -988,3 +996,4 @@ class NextPoiCategoryPredictionDomain:
             x_new.append(np.array(feature))
 
         return x_new, y
+
