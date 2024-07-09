@@ -4,6 +4,50 @@ This is a python implementation of the two proposed approaches for [PoI Detectio
 
 Research group website: [Nesped](http://www.nesped.caf.ufv.br/)
 
+## How execute the code
+
+1. Install the requirements:
+
+    ```bash
+    pip install -r requirements.txt
+    ```
+   1. Install the spatial indexes for the geopandas library:
+   
+    ```bash
+   //Linux
+    sudo apt-get install libspatialindex-dev
+   //Macos
+   brew install spatialindex
+    ```
+    
+    ```bash
+    pip install rtree
+    ```
+2. Download the dataset and the complements on the driver. Should have the following structure:
+
+    ```
+    .
+    ├── Gowalla.zip
+    ├── outros
+    │  ├── maps
+    │  │  ├── brasil
+    │  │  ├── us
+    │  │  [countries_WGS84.]...
+    │  ├── world_timezones
+    │  │  ├── [combined-shapefile-now.]...
+
+3. Configure the **[run.sh](run.sh) & [configuration.py](preprocessing%2Fgowalla%2Fconfiguration.py)**  file with the correct paths to the dataset and the complements.  
+4. Run the pre-processing scripts
+- preprocessing/gowalla/1.py
+- preprocessing/gowalla/2.py
+- preprocessing/gowalla/3.py
+- preprocessing/gowalla/4_us.py
+
+5. Run the main script with the desired option:
+    ```bash
+    ./run.sh sequences_generation
+    ```
+
 ## Organization
 
 The code has a job-based structure, which is helpful for future conversion to Pyspark.

@@ -1,31 +1,36 @@
 
+BASE_DIR = "/Users/vitor/Desktop/mestrado.nosync/data/gowalla/"
 
-BASE_DIR = "/media/claudio/Data/backup_win_hd/Downloads/doutorado/gowalla/"
+BASE_GOWALLA = BASE_DIR + "gowalla_test_new/"
 
-CHECKINS = BASE_DIR + "gowalla_checkins.csv"
+CHECKINS = BASE_GOWALLA + "gowalla_checkins.csv"
 
-CHECKINS_7_CATEGORIES = BASE_DIR + "gowalla_checkins_7_categories.csv"
+CHECKINS_7_CATEGORIES = BASE_GOWALLA + "gowalla_checkins_7_categories.csv"
 
-CHECKINS_LOCAL_DATETIME = BASE_DIR + "gowalla_checkins_7_categories_local_datetime.csv"
+CHECKINS_LOCAL_DATETIME = BASE_GOWALLA + "gowalla_checkins_7_categories_local_datetime.csv"
 
-CHECKINS_LOCAL_DATETIME_COLUMNS_REDUCED = BASE_DIR + "gowalla_checkins_7_categories_local_datetime_columns_reduced.csv"
+CHECKINS_LOCAL_DATETIME_COLUMNS_REDUCED = BASE_GOWALLA + "gowalla_checkins_7_categories_local_datetime_columns_reduced.csv"
 
-CHECKINS_LOCAL_DATETIME_COLUMNS_REDUCED_US = BASE_DIR + "gowalla_checkins_7_categories_local_datetime_columns_reduced_us.csv"
+CHECKINS_LOCAL_DATETIME_COLUMNS_REDUCED_US = BASE_GOWALLA + "gowalla_checkins_7_categories_local_datetime_columns_reduced_us.csv"
 
-SPOTS_1 = BASE_DIR + "gowalla_spots_subset1.csv"
+SPOTS_1 = BASE_GOWALLA + "gowalla_spots_subset1.csv"
 
-CATEGORY_STRUCTURE = BASE_DIR + "gowalla_category_structure.json"
+CATEGORY_STRUCTURE = BASE_GOWALLA + "gowalla_category_structure.json"
 
-TIMEZONES = "/media/claudio/Data/backup_win_hd/Downloads/doutorado/mapas/world_timezones/combined-shapefile.shp"
+# OUTROS
 
-COUNTRIES = "/media/claudio/Data/backup_win_hd/Downloads/doutorado/mapas/countries/Countries_WGS84/Countries_WGS84.shp"
+BASE_OTHERS = BASE_DIR + "outros/"
 
-BRASIL_STATES = "/media/claudio/Data/backup_win_hd/Downloads/doutorado/mapas/brasil/estados_2010/estados_2010.shp"
+TIMEZONES = BASE_OTHERS + "world_timezones/combined-shapefile-now.shp"
 
-US_STATES = "/media/claudio/Data/backup_win_hd/Downloads/doutorado/mapas/us/cities/States_shapefile-shp/States_shapefile.shp"
+COUNTRIES = BASE_OTHERS + "maps/countries_WGS84.shp"
 
-NY_COUNTIES = "/media/claudio/Data/backup_win_hd/Downloads/doutorado/mapas/us/cities/ny/tl_2016_36_cousub/tl_2016_36_cousub.shp"
+BRASIL_STATES = BASE_OTHERS + "maps/brasil/estados_2010.shp"
 
-CA_COUNTIES = "/media/claudio/Data/backup_win_hd/Downloads/doutorado/mapas/us/cities/ca/tl_2016_06_cousub/tl_2016_06_cousub.shp"
+US_STATES = BASE_OTHERS + "maps/us/States_shapefile.shp"
 
-US_COUNTIES = "/media/claudio/Data/backup_win_hd/Downloads/doutorado/mapas/us/cities/cb_2018_us_county_500k/cb_2018_us_county_500k.shp"
+NY_COUNTIES = BASE_OTHERS + "us/cities/ny/tl_2016_36_cousub/tl_2016_36_cousub.shp"
+
+CA_COUNTIES = BASE_OTHERS + "us/cities/ca/tl_2016_06_cousub/tl_2016_06_cousub.shp"
+
+US_COUNTIES = BASE_OTHERS + "maps/us/US_County_Boundary_2018/cb_2018_us_county_500k.shp"

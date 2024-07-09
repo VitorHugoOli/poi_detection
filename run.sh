@@ -24,7 +24,7 @@ POI_CLASSIFICATION_FILENAME="/home/claudio/Documentos/pycharmprojects/poi_detect
 GROUND_TRUTH="/home/claudio/Documentos/pycharmprojects/poi_detection_output/pontosmarcados_corrigido_periodico.csv"
 
 # gowalla
-GOWALLA_BASE_DIR="/media/claudio/Data/backup_win_hd/Downloads/doutorado/gowalla/"
+GOWALLA_BASE_DIR="/Users/vitor/Desktop/mestrado.nosync/data/gowalla/gowalla_test_new/"
 GOWALLA_US="${GOWALLA_BASE_DIR}gowalla_checkins_7_categories_local_datetime_columns_reduced_us.csv"
 GOWALLA_US_SEQUENCES="${GOWALLA_BASE_DIR}sequences/gowalla_7_categories_sequences.csv"
 

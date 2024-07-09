@@ -2,6 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
+      <module fileurl="file://$PROJECT_DIR$/../data/gowalla/.idea/gowalla.iml" filepath="$PROJECT_DIR$/../data/gowalla/.idea/gowalla.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/poi_detection.iml" filepath="$PROJECT_DIR$/.idea/poi_detection.iml" />
     </modules>
   </component>
