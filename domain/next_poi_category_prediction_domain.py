@@ -735,7 +735,7 @@ class NextPoiCategoryPredictionDomain:
         y_test = np.array(y_test)[0]
 
         model.compile(optimizer=parameters['optimizer'], loss=parameters['loss'],
-                      metrics=tf.keras.metrics.CategoricalAccuracy(name="acc"))
+                      metrics=[tf.keras.metrics.CategoricalAccuracy(name="acc")])
         #print("Quantidade de instâncias de entrada (train): ", np.array(X_train).shape)
         #print("Quantidade de instâncias de entrada (test): ", np.array(X_test).shape)
         hi = model.fit(X_train,
