@@ -47,6 +47,11 @@ Research group website: [Nesped](http://www.nesped.caf.ufv.br/)
     ```bash
     ./run.sh sequences_generation
     ```
+   
+6. Run the main script with the desired option:
+    ```bash
+    ./run.sh next
+    ```
 
 ## Organization
 
