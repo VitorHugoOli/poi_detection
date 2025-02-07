@@ -18,10 +18,11 @@ class NextPoiCategoryPredictionLoader:
         for fold_histories in folds_histories:
             for i in range(len(fold_histories)):
                 h = fold_histories[i]
+                print(h)
                 file_index = "replication_" + str(i)
                 pyplot.figure(figsize=(12, 12))
-                pyplot.plot(h['acc'])
-                pyplot.plot(h['val_acc'])
+                pyplot.plot(h['accuracy'])
+                pyplot.plot(h['val_accuracy'])
                 pyplot.title('model acc')
                 pyplot.ylabel('acc')
                 pyplot.xlabel('epoch')

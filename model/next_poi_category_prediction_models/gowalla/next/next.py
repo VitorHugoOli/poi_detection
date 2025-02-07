@@ -3,6 +3,7 @@ from tensorflow.keras.layers import GRU, LSTM, Activation, Dense, Masking, Dropo
 from tensorflow.keras.layers import add, Concatenate
 from tensorflow.keras.layers import Embedding
 from tensorflow.keras.models import Model
+from tensorflow.keras.layers import Layer
 import numpy as np
 
 import tensorflow as tf
@@ -55,7 +56,7 @@ class NEXT:
 
         print("aaaa")
         print(concat_2.shape)
-        pos = self.positional_encoding(concat_2, 4)
+        pos = PositionalEncodingLayer(4)(concat_2)
 
         att = Concatenate()([att, pos])
         att = Flatten()(att)
@@ -68,40 +69,37 @@ class NEXT:
 
         return model
 
-    def positional_encoding(self, inputs,
-                            maxlen,
-                            masking=False,
-                            scope="positional_encoding"):
-        '''Sinusoidal Positional_Encoding. See 3.5
-        inputs: 3d tensor. (N, T, E)
-        maxlen: scalar. Must be >= T
-        masking: Boolean. If True, padding positions are set to zeros.
-        scope: Optional scope for `variable_scope`.
-        returns
-        3d tensor that has the same shape as inputs.
+class PositionalEncodingLayer(Layer):
+    def __init__(self, maxlen, masking=False, **kwargs):
+        super(PositionalEncodingLayer, self).__init__(**kwargs)
+        self.maxlen = maxlen
+        self.masking = masking
+
+    def call(self, inputs):
+        '''Sinusoidal Positional Encoding.
+        inputs: 3D tensor. (N, T, E)
+        returns: 3D tensor that has the same shape as inputs.
         '''
-
-        E = inputs.shape[-1]  # static
+        E = tf.shape(inputs)[-1]  # dynamic
         N, T = tf.shape(inputs)[0], tf.shape(inputs)[1]  # dynamic
-        with tf.compat.v1.variable_scope(scope, reuse=tf.compat.v1.AUTO_REUSE):
-            # position indices
-            position_ind = tf.tile(tf.expand_dims(tf.range(T), 0), [N, 1])  # (N, T)
 
-            # First part of the PE function: sin and cos argument
-            position_enc = np.array([
-                [pos / np.power(10000, (i - i % 2) / E) for i in range(E)]
-                for pos in range(maxlen)])
+        # Position indices
+        position_ind = tf.tile(tf.expand_dims(tf.range(T), 0), [N, 1])  # (N, T)
 
-            # Second part, apply the cosine to even columns and sin to odds.
-            position_enc[:, 0::2] = np.sin(position_enc[:, 0::2])  # dim 2i
-            position_enc[:, 1::2] = np.cos(position_enc[:, 1::2])  # dim 2i+1
-            position_enc = tf.convert_to_tensor(position_enc, tf.float32)  # (maxlen, E)
+        # First part of the PE function: sin and cos argument
+        position_enc = tf.range(self.maxlen, dtype=tf.float32)[:, tf.newaxis] / tf.pow(10000.0,
+                                                                                       (tf.range(E,
+                                                                                                 dtype=tf.float32) // 2) * 2.0 / tf.cast(
+                                                                                           E, tf.float32))
 
-            # lookup
-            outputs = tf.nn.embedding_lookup(position_enc, position_ind)
+        # Apply the cosine to even columns and sin to odd columns
+        position_enc = tf.where(tf.range(E) % 2 == 0, tf.sin(position_enc), tf.cos(position_enc))
 
-            # masks
-            if masking:
-                outputs = tf.where(tf.equal(inputs, 0), inputs, outputs)
+        # Lookup
+        outputs = tf.nn.embedding_lookup(position_enc, position_ind)
 
-            return tf.cast(outputs, tf.float32)
+        # Apply masking if required
+        if self.masking:
+            outputs = tf.where(tf.equal(inputs, 0), inputs, outputs)
+
+        return tf.cast(outputs, tf.float32)

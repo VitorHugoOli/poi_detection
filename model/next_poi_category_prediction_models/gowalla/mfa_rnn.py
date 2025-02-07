@@ -14,9 +14,10 @@ from spektral.layers.convolutional import ARMAConv, GCNConv, GATConv
 from spektral.layers.pooling import GlobalAvgPool, GlobalAttentionPool, GlobalAttnSumPool
 import tensorflow_probability as tfp
 
-l2_reg = 5e-5           # L2 regularization rate
+l2_reg = 5e-5  # L2 regularization rate
 drop_out_rate = 0
 patience = 3
+
 
 # class AdaptativeGCN(Layer):
 #     def __init__(self, main_channel,
@@ -69,10 +70,55 @@ patience = 3
 #
 #         return output
 
+class MultiplyLayerByWeight(tf.keras.layers.Layer):
+    def __init__(self, initial_value=0.1, **kwargs):
+        super(MultiplyLayerByWeight, self).__init__(**kwargs)
+        self.initial_value = initial_value
+
+    def build(self, input_shape):
+        # Create a trainable weight variable for this layer.
+        self._multiplier = self.add_weight(name='multiplier',
+                                           shape=(),
+                                           initializer=tf.keras.initializers.Constant(self.initial_value),
+                                           trainable=True)
+        super(MultiplyLayerByWeight, self).build(input_shape)  # Be sure to call this at the end
+
+    def call(self, inputs):
+        return self._multiplier * tf.multiply(inputs[0], inputs[1])
+
+
+class MultiplyLayer(tf.keras.layers.Layer):
+    def __init__(self, **kwargs):
+        super(MultiplyLayer, self).__init__(**kwargs)
+
+    def build(self, input_shape):
+        super(MultiplyLayer, self).build(input_shape)  # Be sure to call this at the end
+
+    def call(self, inputs):
+        return tf.multiply(inputs[0], inputs[1])
+
+
 class MFA_RNN(NNBase):
 
     def __init__(self):
         super().__init__("GRUenhaced original 10mil")
+
+    def compute_y_up(self, inputs):
+        r_entropy, g_entropy, g_pure_entropy, y_sup, spatial_flatten, gnn, gnn_puro = inputs
+        # Você pode definir os valores constantes usando tf.constant,
+        # ou definir essas variáveis como pesos de uma camada customizada, se necessário.
+        v1 = tf.constant(0.5)
+        v2 = tf.constant(1.0)
+        v3 = tf.constant(-0.2)
+        v4 = tf.constant(8.0)
+        v5 = tf.constant(8.0)
+
+        term1 = ((1 / tf.math.reduce_mean(r_entropy)) + v1) * v2 * y_sup
+        term2 = v3 * spatial_flatten
+        term3 = v4 * gnn * ((1 / tf.math.reduce_mean(g_entropy)) + v1)
+        term4 = v5 * gnn_puro * ((1 / tf.math.reduce_mean(g_pure_entropy)) + v1)
+
+        return term1 + term2 + term3 + term4
 
     def build(self, step_size, location_input_dim, time_input_dim, num_users, seed=None):
         if seed is not None:
@@ -113,7 +159,6 @@ class MFA_RNN(NNBase):
         emb_duration = Embedding(input_dim=49, output_dim=3, input_length=step_size)
         emb_week_day = Embedding(input_dim=7, output_dim=3, input_length=step_size)
 
-
         locais = location_input_dim
         spatial_embedding = emb_category(location_category_input)
         temporal_embedding = emb_time(temporal_input)
@@ -129,10 +174,11 @@ class MFA_RNN(NNBase):
         duration_flatten = Flatten()(duration_embbeding)
 
         # melhor -
-        distance_duration = tf.Variable(initial_value=0.1) * tf.multiply(distance_embbeding, duration_embbeding)
+        distance_duration = MultiplyLayerByWeight()(inputs=[distance_embbeding, duration_embbeding])
 
         l_p_flatten = Concatenate()([spatial_flatten, temporal_flatten, distance_flatten, duration_flatten])
-        l_p = Concatenate()([spatial_embedding, temporal_embedding, distance_embbeding, duration_embbeding, distance_duration])
+        l_p = Concatenate()(
+            [spatial_embedding, temporal_embedding, distance_embbeding, duration_embbeding, distance_duration])
 
         # l_p_flatten = Flatten()(l_p)
         # ids_flatten = Flatten()(id_flatten)
@@ -149,11 +195,11 @@ class MFA_RNN(NNBase):
                                  num_heads=4,
                                  name='Attention')(srnn, srnn)
 
-        distance_duration_matrix = tf.multiply(categories_distance_matrix, categories_durations_matrix)
+        distance_duration_matrix = MultiplyLayer()(inputs=[categories_distance_matrix, categories_durations_matrix])
 
         distance_matrix = categories_distance_matrix
-        #distance_matrix = categories_distance_matrix
-        #x_distances = self.graph_distances_a(distance_matrix, adjancency_matrix)
+        # distance_matrix = categories_distance_matrix
+        # x_distances = self.graph_distances_a(distance_matrix, adjancency_matrix)
         x_distances = GCNConv(22, activation='swish')([distance_matrix, adjancency_matrix])
         x_distances = Dropout(0.5)(x_distances)
         x_distances = GCNConv(10, activation='swish')([x_distances, adjancency_matrix])
@@ -161,10 +207,10 @@ class MFA_RNN(NNBase):
         x_distances = Flatten()(x_distances)
 
         durations_matrix = categories_durations_matrix
-        #durations_matrix = categories_durations_matrix
-        #x_durations = self.graph_temporal_arma(durations_matrix, adjancency_matrix)
+        # durations_matrix = categories_durations_matrix
+        # x_durations = self.graph_temporal_arma(durations_matrix, adjancency_matrix)
         x_durations = GCNConv(22, activation='swish')([durations_matrix, adjancency_matrix])
-        #x_durations = Dropout(0.5)(x_durations)
+        # x_durations = Dropout(0.5)(x_durations)
         x_durations = GCNConv(10, activation='swish')([x_durations, adjancency_matrix])
         x_durations = Dropout(0.3)(x_durations)
         x_durations = Flatten()(x_durations)
@@ -179,13 +225,13 @@ class MFA_RNN(NNBase):
         # att = Concatenate()([srnn, att])
         att = Flatten()(att)
         print("att", att.shape)
-        print("transposto", tf.transpose(att).shape)
+        # print("transposto", tf.transpose(att).shape)
         print("gc", x_distances.shape)
         # y_up = tf.matmul(att, x)
         srnn = Flatten()(srnn)
         id_flatten = Flatten()(id_embedding)
         y_sup = Concatenate()([srnn, att])
-        #y_sup = srnn
+        # y_sup = srnn
         gnn = Concatenate()([srnn, att, x_distances, x_durations, distance_duration_matrix])
         gnn = Dense(location_input_dim, activation='softmax')(gnn)
         gnn_puro = Concatenate()([x_distances, x_durations, distance_duration_matrix])
@@ -196,129 +242,23 @@ class MFA_RNN(NNBase):
         y_cup = Dense(location_input_dim, activation='softmax')(y_cup)
         spatial_flatten = Dense(location_input_dim, activation='softmax')(spatial_flatten)
 
-        r_entropy = tfp.distributions.Categorical(probs=y_sup).entropy()
-        g_entropy = tfp.distributions.Categorical(probs=gnn).entropy()
-        g_pure_entropy = tfp.distributions.Categorical(probs=gnn_puro).entropy()
-        y_cup_entropy = tfp.distributions.Categorical(probs=y_cup).entropy()
-        y_spatial_entropy = tfp.distributions.Categorical(probs=y_cup).entropy()
+        r_entropy = Lambda(lambda x: tfp.distributions.Categorical(probs=x).entropy())(y_sup)
+        g_entropy = Lambda(lambda x: tfp.distributions.Categorical(probs=x).entropy())(gnn)
+        g_pure_entropy = Lambda(lambda x: tfp.distributions.Categorical(probs=x).entropy())(gnn_puro)
+        # y_cup_entropy = tfp.distributions.Categorical(probs=y_cup).entropy()
+        # y_spatial_entropy = tfp.distributions.Categorical(probs=y_cup).entropy()
 
-        y_up = ((1 / tf.math.reduce_mean(r_entropy)) + tf.Variable(0.5)) * tf.Variable(initial_value=1.) * y_sup + tf.Variable(initial_value=-0.2) * spatial_flatten + tf.Variable(8.) * gnn * ((1 / tf.math.reduce_mean(g_entropy)) + tf.Variable(0.5)) + tf.Variable(8.) * gnn_puro * ((1 / tf.math.reduce_mean(g_pure_entropy)) + tf.Variable(0.5))
+        y_up = Lambda(self.compute_y_up)(
+            [r_entropy, g_entropy, g_pure_entropy, y_sup, spatial_flatten, gnn, gnn_puro]
+        )
 
         # y_up = tf.Variable(initial_value=1.) * y_cup + (
         #             (1 / tf.math.reduce_mean(r_entropy)) + tf.Variable(0.5)) * tf.Variable(initial_value=1.) * y_sup + tf.Variable(
         #     initial_value=-0.2) * spatial_flatten + tf.Variable(initial_value=8.) * gnn
 
-        model = Model(inputs=[location_category_input, temporal_input, country_input, distance_input, duration_input, week_day_input, user_id_input, pois_ids_input, adjancency_matrix, categories_distance_matrix, categories_temporal_matrix, categories_durations_matrix, sequence_poi_category_matrix], outputs=y_up, name="MFA-RNN")
+        model = Model(inputs=[location_category_input, temporal_input, country_input, distance_input, duration_input,
+                              week_day_input, user_id_input, pois_ids_input, adjancency_matrix,
+                              categories_distance_matrix, categories_temporal_matrix, categories_durations_matrix,
+                              sequence_poi_category_matrix], outputs=y_up, name="MFA-RNN")
 
         return model
-
-    def mhsa(self, input):
-        print("entrada mhsa: ", input.shape)
-        att_layer = MultiHeadAttention(
-            key_dim=1,
-            num_heads=4,
-            name='Multi-Head-self-attention',
-        )(input, input)
-
-        #att_layer = Dense(150, activation='elu')(att_layer)
-
-        print("saida mhsa: ", att_layer.shape)
-
-        return att_layer
-
-    def graph_temporal_arma(self, x, adjacency):
-        x = ARMAConv(22, iterations=1,
-                     order=3,
-                     share_weights=True,
-                     dropout_rate=0,
-                     activation='relu',
-                     gcn_activation='relu',
-                     kernel_regularizer=l2(l2_reg))([x, adjacency])
-
-        x = Dropout(0.5)(x)
-
-        x = ARMAConv(10, iterations=1,
-                     order=1,
-                     share_weights=True,
-                     dropout_rate=drop_out_rate,
-                     activation='relu',
-                     gcn_activation='relu')([x, adjacency])
-        x = Dropout(0.5)(x)
-
-        return x
-
-    def graph_distances_a(self, x, adjacency):
-        x = ARMAConv(22, iterations=1,
-                     order=2,
-                     share_weights=True,
-                     dropout_rate=0,
-                     activation='swish',
-                     gcn_activation='swish',
-                     kernel_regularizer=l2(l2_reg))([x, adjacency])
-
-        #x = Dropout(0.5)(x)
-
-        x = ARMAConv(10, iterations=1,
-                     order=2,
-                     share_weights=True,
-                     dropout_rate=drop_out_rate,
-                     activation='swish',
-                     gcn_activation='swish')([x, adjacency])
-        x = Dropout(0.5)(x)
-
-        return x
-
-    def graph_durations_a(self, x, adjacency):
-        x = ARMAConv(22, iterations=1,
-                     order=3,
-                     share_weights=True,
-                     dropout_rate=0,
-                     activation='swish',
-                     gcn_activation='swish',
-                     kernel_regularizer=l2(l2_reg))([x, adjacency])
-
-        #x = Dropout(0.5)(x)
-
-        x = ARMAConv(10, iterations=1,
-                     order=2,
-                     share_weights=True,
-                     dropout_rate=drop_out_rate,
-                     activation='swish',
-                     gcn_activation='swish')([x, adjacency])
-        x = Dropout(0.5)(x)
-
-        return x
-
-    def graph_temporal(self, x, adjacency):
-
-        x = GCNConv(22, activation='relu')([x, adjacency])
-
-        x = Dropout(0.5)(x)
-
-        x = GCNConv(10, activation='relu')([x, adjacency])
-
-        x = Dropout(0.5)(x)
-
-        return x
-
-    def graph_distances(self, x, adjacency):
-        x = GCNConv(22, activation='relu')([x, adjacency])
-
-        x = Dropout(0.5)(x)
-
-        x = GCNConv(10, activation='relu')([x, adjacency])
-
-        x = Dropout(0.5)(x)
-
-        return x
-
-    def graph_durations(self, x, adjacency):
-        x = GCNConv(22, activation='relu')([x, adjacency])
-
-        x = Dropout(0.5)(x)
-
-        x = GCNConv(10, activation='relu')([x, adjacency])
-
-        x = Dropout(0.5)(x)
-
-        return x

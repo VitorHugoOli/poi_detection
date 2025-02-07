@@ -4,6 +4,14 @@ This is a python implementation of the two proposed approaches for [PoI Detectio
 
 Research group website: [Nesped](http://www.nesped.caf.ufv.br/)
 
+## Flow to reproduce
+
+1. Download the data in https://www.yongliu.org/datasets/
+2. Download the timezones in 
+3. Download the countires maps https://hub.arcgis.com/datasets/UIA::countries-wgs84/explore?location=-0.000000,-0.000000,2.41
+4. Download the estados_2010 in https://www.codegeo.com.br/2013/04/shapefiles-do-brasil-para-download.html
+
+
 ## Organization
 
 The code has a job-based structure, which is helpful for future conversion to Pyspark.

@@ -24,9 +24,10 @@ POI_CLASSIFICATION_FILENAME="/home/claudio/Documentos/pycharmprojects/poi_detect
 GROUND_TRUTH="/home/claudio/Documentos/pycharmprojects/poi_detection_output/pontosmarcados_corrigido_periodico.csv"
 
 # gowalla
-GOWALLA_BASE_DIR="/media/claudio/Data/backup_win_hd/Downloads/doutorado/gowalla/"
-GOWALLA_US="${GOWALLA_BASE_DIR}gowalla_checkins_7_categories_local_datetime_columns_reduced_us.csv"
-GOWALLA_US_SEQUENCES="${GOWALLA_BASE_DIR}sequences/gowalla_7_categories_sequences.csv"
+#TODO: @germano
+GOWALLA_BASE_DIR="/Users/vitor/Desktop/mestrado/data/gowalla/gowalla_test/"
+GOWALLA_US="/Users/vitor/Downloads/checkins_preprocessed/checkins_Texas.csv"
+GOWALLA_US_SEQUENCES="/Users/vitor/Desktop/mestrado/data/gowalla/gowalla_test/sequences/gowalla_7_categories_sequences.csv"
 
 # points_of_interest_job
 # This job is applied to detect users' pois
@@ -76,21 +77,21 @@ SEQUENCE_GENERATION_FOR_POI_CATEGORIZATION_SEQUENTIAL_CONFIG='{
           "dataset_name":"gowalla"
           }'
 
-NEXT_POI_CATEGORY_PREDICTION_CONFIG='{
-          "job": "next_poi_category_prediction_job",
-          "users_sequences": "'$USERS_STEPS_10_CATEGORIES_SEQUENCES_FILENAME'",
-          "baseline": "garg",
-          "dataset_name":"users_steps",
-          "categories_type":"10_categories"
-          }'
-
 #NEXT_POI_CATEGORY_PREDICTION_CONFIG='{
 #          "job": "next_poi_category_prediction_job",
-#          "users_sequences": "'$GOWALLA_US_SEQUENCES'",
-#          "baseline": "mfa",
-#          "dataset_name":"gowalla",
-#          "categories_type":"7_categories"
+#          "users_sequences": "'$USERS_STEPS_10_CATEGORIES_SEQUENCES_FILENAME'",
+#          "baseline": "garg",
+#          "dataset_name":"users_steps",
+#          "categories_type":"10_categories"
 #          }'
+
+NEXT_POI_CATEGORY_PREDICTION_CONFIG='{
+          "job": "next_poi_category_prediction_job",
+          "users_sequences": "'$GOWALLA_US_SEQUENCES'",
+          "baseline": "mfa",
+          "dataset_name":"gowalla",
+          "categories_type":"7_categories"
+          }'
 
 #PERFORMANCE_PLOTS_CONFIG='{
 #          "job": "performance_plots_job",

@@ -21,7 +21,6 @@ class NextPoiCategoryPredictionSequencesGenerationJob:
         to_8_categories = Input.get_instance().inputs['to_8_categories']
         filename_8_categories = Input.get_instance().inputs['8_categories_filename']
         users_sequences_folder = Input.get_instance().inputs['users_sequences_folder']
-        print("Dataset: ", Input.get_instance().inputs['dataset_name'])
 
         userid_column = self.poi_categorization_configuration.DATASET_COLUMNS[1][dataset_name]['userid']
         category_column = self.poi_categorization_configuration.DATASET_COLUMNS[1][dataset_name]['category']
@@ -35,8 +34,10 @@ class NextPoiCategoryPredictionSequencesGenerationJob:
 
         users_checkin = self.sequences_generation_for_poi_categorization_sequential_baselines_domain.read_csv(users_checkin_filename, datetime_column)
 
-        if dataset_name == "gowalla":
-            users_checkin = users_checkin.query("state_name == 'TEXAS'")
+        # if dataset_name == "gowalla":
+            # users_checkin = users_checkin.query("state_name == 'Texas'")
+
+        print("users_checkin: ", users_checkin)
 
         if to_8_categories == "yes":
             users_checkin = self.join_work_and_office_join_sport_leisure(users_checkin, category_column)

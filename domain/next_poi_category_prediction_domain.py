@@ -10,6 +10,7 @@ import pandas as pd
 import sklearn.metrics as skm
 import tensorflow as tf
 from tensorflow.keras.callbacks import EarlyStopping
+from tensorflow.keras.optimizers import Adam, Adadelta, SGD, RMSprop, Nadam, Ftrl
 from tensorflow.keras import utils as np_utils
 from sklearn.model_selection import KFold
 from spektral.transforms.layer_preprocess import LayerPreprocess
@@ -20,7 +21,6 @@ from foundation.util.next_poi_category_prediction_util import sequence_to_x_y, \
     sequence_tuples_to_spatial_temporal_and_feature7_ndarrays, \
     remove_hour_from_sequence_y, sequence_to_x_y_v1
 from foundation.util.nn_preprocessing import one_hot_decoding
-
 from model.next_poi_category_prediction_models.users_steps.serm.model import SERMUsersSteps
 from model.next_poi_category_prediction_models.users_steps.map.model import MAPUsersSteps
 from model.next_poi_category_prediction_models.users_steps.stf.model import STFUsersSteps
@@ -86,7 +86,7 @@ class NextPoiCategoryPredictionDomain:
             df = df.sort_values(by='total', ascending=False)
         else:
             df = df.sort_values(by='rand', ascending=False)
-        print(df['total'].describe())
+        print(df.describe())
 
         if dataset_name == "gowalla":
             minimum = 40
@@ -205,6 +205,8 @@ class NextPoiCategoryPredictionDomain:
                     max_distance = distance
                 if duration > max_duration:
                     max_duration = duration
+                # print("distance: ", distance)
+                # print("duration: ", duration)
                 distance = self._distance_importance(distance)
                 duration = self._duration_importance(duration)
                 new_sequence.append([location_category_id, hour, country, distance, duration, week_day, user_id, poi_id])
@@ -229,8 +231,8 @@ class NextPoiCategoryPredictionDomain:
         print("maior duracao: ", max_duration)
         print("distancia mediana: ", st.median(distance_list))
         print("duracao mediana: ", st.median(duration_list))
-        df['x'] = np.array(x_list)
-        df['y'] = np.array(y_list)
+        df['x'] = x_list
+        df['y'] = y_list
         df = df[['id', 'x', 'y']]
 
         print("paises: ", len(list(countries.keys())))
@@ -267,12 +269,6 @@ class NextPoiCategoryPredictionDomain:
                     users_test_indexes[j].append(test_indexes)
                 j += 1
 
-        print("treino", len(users_train_indexes))
-        print("fold 0: ", len(users_train_indexes[0][1]), len(users_test_indexes[0][1]))
-        print("fold 1: ", len(users_train_indexes[1][1]), len(users_test_indexes[1][1]))
-        print("fold 2: ", len(users_train_indexes[2][1]), len(users_test_indexes[2][1]))
-        print("fold 3: ", len(users_train_indexes[3][1]), len(users_test_indexes[3][1]))
-        print("fold 4: ", len(users_train_indexes[4][1]), len(users_test_indexes[4][1]))
 
         max_userid = len(df)
         print("Quantidade de usuários: ", len(df))
@@ -734,8 +730,12 @@ class NextPoiCategoryPredictionDomain:
         print("f", y_train.shape)
         y_test = np.array(y_test)[0]
 
-        model.compile(optimizer=parameters['optimizer'], loss=parameters['loss'],
-                      metrics=tf.keras.metrics.CategoricalAccuracy(name="acc"))
+        print(parameters["optimizer"].get_config())
+        model.compile(optimizer=Adam(learning_rate=0.001, beta_1=0.8, beta_2=0.9), loss=parameters['loss'],
+                      metrics=["accuracy"]
+                      )
+
+
         #print("Quantidade de instâncias de entrada (train): ", np.array(X_train).shape)
         #print("Quantidade de instâncias de entrada (test): ", np.array(X_test).shape)
         hi = model.fit(X_train,

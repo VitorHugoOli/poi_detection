@@ -24,11 +24,6 @@ if __name__ == "__main__":
         for i in range(len(local_datetime_list)):
             local_datetime_list[i] = local_datetime_list[i][:19]
         df['local_datetime'] = np.array(local_datetime_list)
-        print(df)
-
-        print("categorias uunicas: ", df['category'].unique().tolist())
-
-
 
         if first:
             df.to_csv(CHECKINS_LOCAL_DATETIME_COLUMNS_REDUCED, index=False)
